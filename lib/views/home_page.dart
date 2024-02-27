@@ -1,7 +1,7 @@
-import 'package:flavorfusion/model/recipe_model.dart';
-import 'package:flavorfusion/service/recipe_services.dart';
+import 'package:flavorfusion/controller/recipe_provider.dart';
 import 'package:flavorfusion/views/widgets/recipe_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,27 +11,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late List<RecipeModel> _recipes;
-  bool _isLoading = true;
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    getRecipes();
-  }
-
-  Future<void> getRecipes() async {
-    _recipes = await RecipeApi.getRecipe();
-
-    setState(() {
-      _isLoading = false;
-    });
-    print(_recipes);
+    Provider.of<RecipeProvider>(context, listen: false).getFoodRecipe();
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         appBar: AppBar(
           title: const Row(
@@ -45,17 +33,24 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        body: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : ListView.builder(
-                itemCount: _recipes.length,
-                itemBuilder: (context, index) {
-                  return RecipeCard(
-                      title: _recipes[index].name,
-                      cookTime: _recipes[index].totalTime,
-                      rating: _recipes[index].rating.toString(),
-                      thumbnailUrl: _recipes[index].images);
-                },
-              ));
+        body: Consumer<RecipeProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }else{
+               return ListView.builder(
+              itemCount: provider.recipes.length,
+              itemBuilder: (context, index) {
+                return RecipeCard(
+                    title: provider.recipes[index].name,
+                    cookTime: provider.recipes[index].totalTime,
+                    rating: provider.recipes[index].rating.toString(),
+                    thumbnailUrl: provider.recipes[index].images);
+              },
+            );
+            }
+           
+          },
+        ));
   }
 }
